@@ -1,0 +1,20 @@
+import { Link } from 'react-router-dom';
+import { Coins, Flame, Heart, Newspaper, Tag, Wallet } from 'lucide-react';
+import { getHistory, getWallet } from '../lib/api';
+import { inr } from '../lib/format';
+import { useAuth } from '../hooks/auth';
+import { useFavorites } from '../hooks/app';
+import { useAsync } from '../hooks/useAsync';
+import { Page } from '../components/layout';
+import { Btn, EmptyState, Skeleton } from '../components/ui';
+import { IconBadge } from '../components/Icon';
+export function Dashboard(){
+ const {user,loading}=useAuth();const {items}=useFavorites();
+ const wallet=useAsync(()=>user?getWallet(user.$id):Promise.reject(new Error('no user')),[user?.$id]);
+ const hist=useAsync(()=>user?getHistory(user.$id):Promise.resolve([]),[user?.$id]);
+ if(loading)return <Page title="Dashboard"><Skeleton rows={3}/></Page>;
+ if(!user)return <Page title="Dashboard"><EmptyState icon="user" title="Login to open your dashboard" text="See your wallet, rewards, saved items and reading history in one place." action={<div className="mx-auto max-w-xs space-y-2.5"><Btn to="/login">Login</Btn><Btn to="/register" variant="outline">Create account</Btn></div>}/></Page>;
+ const w=wallet.data;const count=(t:string)=>items.filter(i=>i.itemType===t).length;
+ const stat=(icon:JSX.Element,label:string,value:string|number,to:string)=><Link to={to} className="glass glass-hover rounded-3xl p-5"><span className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl bg-mint text-pri-dark">{icon}</span><p className="text-2xl font-extrabold">{value}</p><p className="text-xs text-slate">{label}</p></Link>;
+ return <Page title={`Hello, ${user.name?.split(' ')[0]||'there'}`} right={<Btn to="/profile" variant="outline" full={false} className="!py-2.5">Profile</Btn>}><div className="grid gap-4 lg:grid-cols-[1.3fr_1fr]"><div className="glass-green rounded-[32px] p-6 text-white md:p-8"><p className="text-xs font-medium text-white/85">Wallet balance</p><p className="text-4xl font-extrabold md:text-5xl">{w?inr(w.balance??0):'₹ —'}</p>{!w&&!wallet.loading&&<p className="mt-1 text-xs text-white/80">Your wallet will appear once rewards are enabled.</p>}<div className="mt-6 flex flex-wrap gap-3"><Link to="/wallet/withdraw" className="rounded-full bg-gold px-5 py-3 text-sm font-bold text-ink">Withdraw</Link><Link to="/rewards/check-in" className="rounded-full border border-white/50 px-5 py-3 text-sm font-bold">Daily check-in</Link></div></div><div className="grid grid-cols-2 gap-4">{stat(<Coins size={20}/>, 'Coins',w?.coins??0,'/rewards/coins')}{stat(<Flame size={20}/>, 'Day streak',w?.streak??0,'/rewards/check-in')}{stat(<Heart size={20}/>, 'Saved items',items.length,'/favorites')}{stat(<Tag size={20}/>, 'Saved offers',count('offer'),'/favorites')}</div></div><div className="grid gap-4 lg:grid-cols-2"><section className="glass rounded-3xl p-5"><div className="mb-3 flex items-center justify-between"><h2 className="text-lg font-bold">Continue reading</h2><Link to="/profile/history" className="text-sm font-semibold text-pri-dark">History</Link></div>{(hist.data?.length??0)===0?<p className="py-4 text-sm text-slate">Stories you read will show up here.</p>:<ul>{hist.data!.slice(0,5).map(h=><li key={h.$id}><Link to={`/news/${h.slug}`} className="flex items-center gap-3 border-b border-white/70 py-2.5"><Newspaper size={16} className="text-pri-dark"/><span className="line-clamp-1 flex-1 text-sm font-medium">{h.title}</span></Link></li>)}</ul>}</section><section className="glass rounded-3xl p-5"><h2 className="mb-3 text-lg font-bold">Quick actions</h2><div className="grid grid-cols-2 gap-2.5">{[['card','Credit cards','/credit-cards'],['calc','Calculators','/calculators'],['bars','Compare','/product-comparisons'],['tag','Offers','/offers'],['wallet','Wallet','/wallet'],['gift','Rewards','/rewards']].map(([i,l,to])=><Link key={to} to={to} className="flex items-center gap-2.5 rounded-2xl bg-white/60 p-3 text-sm font-semibold hover:bg-white"><IconBadge name={i} size={32}/>{l}</Link>)}</div></section></div><p className="hidden"><Wallet/></p></Page>;
+}
