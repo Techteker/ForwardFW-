@@ -116,3 +116,34 @@ body {
     min-width: 0;
   }
 }
+
+
+/* Mobile layout: use the containing viewport width (not 100vw, which can
+   include browser UI/scrollbar width in embedded mobile browsers). */
+@media (max-width: 767px) {
+  html, body, #root {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  body, #root { overflow-x: hidden; }
+  #root > div,
+  #root .min-h-screen {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  #root header,
+  #root footer,
+  #root main,
+  #root main > section,
+  #root main > div,
+  #root .mx-auto { max-width: 100%; }
+  #root section.mx-auto,
+  #root main > .mx-auto { width: 100%; }
+  #root .grid,
+  #root .grid > * { min-width: 0; }
+  /* Compact mobile rhythm without changing desktop spacing. */
+  #root main .space-y-16 > :not([hidden]) ~ :not([hidden]) { margin-top: 2.5rem; }
+  #root main .space-y-14 > :not([hidden]) ~ :not([hidden]) { margin-top: 2.25rem; }
+}
