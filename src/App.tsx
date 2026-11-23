@@ -17,7 +17,6 @@ import { Contact, CookieBanner, CookieSettings, Faq, Maintenance, NotFound, Offl
 import { HomePage } from './pages/home';
 import { FinancialProducts, LandingPage, ProductComparisons } from './pages/landing';
 import { AppDownload, AppFeatures, AppLanding } from './pages/app';
-import { Dashboard } from './pages/dashboard';
 import { About, HelpCenter } from './pages/info';
 
 export default function App() {
@@ -73,7 +72,7 @@ export default function App() {
           <Route path="/wallet/transactions" element={<Transactions />} />
           <Route path="/referral" element={<Referral />} />
           <Route path="/referral/rewards" element={<ReferralRewards />} />
-          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Navigate to="/" replace />} />
           <Route path="/login" element={<Login />} />
           <Route path="/login/mobile" element={<MobileLogin />} />
           <Route path="/verify-otp" element={<VerifyOtp />} />
