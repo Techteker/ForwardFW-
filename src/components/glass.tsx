@@ -1,0 +1,18 @@
+import { ReactNode, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { ChevronDown } from 'lucide-react';
+export function Reveal({ children, delay = 0, className = '' }: { children: ReactNode; delay?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null); const [on, setOn] = useState(false);
+  useEffect(() => { const el = ref.current; if (!el) return; if (!('IntersectionObserver' in window)) { setOn(true); return; } const io = new IntersectionObserver(([e]) => { if (e.isIntersecting) { setOn(true); io.disconnect(); } }, { threshold: 0.12 }); io.observe(el); return () => io.disconnect(); }, []);
+  return <div ref={ref} style={{ transitionDelay: `${delay}ms` }} className={`reveal ${on ? 'in' : ''} ${className}`}>{children}</div>;
+}
+export function SectionTitle({ eyebrow, title, text, to, link }: { eyebrow?: string; title: string; text?: string; to?: string; link?: string }) {
+  return <div className="mb-6 flex flex-wrap items-end justify-between gap-3"><div className="max-w-2xl">{eyebrow && <p className="mb-2 inline-block rounded-full bg-white/70 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-pri-dark">{eyebrow}</p>}<h2 className="text-2xl font-extrabold leading-tight md:text-4xl">{title}</h2>{text && <p className="mt-2 text-sm text-slate md:text-base">{text}</p>}</div>{to && <Link to={to} className="rounded-full bg-white/70 px-4 py-2 text-sm font-semibold text-pri-dark hover:bg-white">{link || 'View all'}</Link>}</div>;
+}
+export function Faq({ items }: { items: [string, string][] }) {
+  const [open, setOpen] = useState<number | null>(0);
+  return <div className="space-y-2.5">{items.map(([q, a], i) => <div key={q} className="glass rounded-2xl"><button aria-expanded={open === i} onClick={() => setOpen(open === i ? null : i)} className="flex w-full items-center justify-between gap-4 px-5 py-4 text-left text-[15px] font-semibold">{q}<ChevronDown size={18} className={`shrink-0 transition-transform ${open === i ? 'rotate-180' : ''}`} /></button>{open === i && <p className="px-5 pb-4 text-sm leading-relaxed text-slate">{a}</p>}</div>)}</div>;
+}
+export function PhoneMock({ className = '' }: { className?: string }) {
+  return <div className={`relative mx-auto w-[270px] ${className}`} aria-hidden><div className="absolute -inset-8 rounded-full bg-lime/30 blur-3xl" /><div className="relative rounded-[42px] border-[7px] border-ink bg-[#F7F9F2] p-3"><div className="mx-auto mb-3 h-5 w-24 rounded-full bg-ink" /><div className="mb-3 flex items-center justify-between"><span className="font-display text-lg font-extrabold">FOR<span className="text-pri-dark">WORD</span></span><span className="h-7 w-7 rounded-full bg-white/80" /></div><div className="glass-green mb-3 rounded-2xl p-3.5 text-white"><p className="text-[10px] opacity-80">Wallet balance</p><p className="text-xl font-extrabold">₹ 0.00</p><div className="mt-2 flex gap-1.5"><span className="rounded-full bg-white/25 px-2.5 py-1 text-[10px] font-bold">Withdraw</span><span className="rounded-full bg-gold px-2.5 py-1 text-[10px] font-bold text-ink">Check in</span></div></div>{[0,1,2].map(i => <div key={i} className="glass mb-2 flex items-center gap-2.5 rounded-2xl p-2.5"><span className="h-10 w-10 rounded-xl bg-mint" /><span className="flex-1 space-y-1.5"><span className="block h-2 w-10 rounded bg-pri/40" /><span className="block h-2.5 w-full rounded bg-ink/15" /><span className="block h-2.5 w-2/3 rounded bg-ink/10" /></span></div>)}<div className="glass mt-3 flex justify-around rounded-full py-2">{[0,1,2,3,4].map(i => <span key={i} className={`h-5 w-5 rounded-full ${i === 0 ? 'bg-pri' : 'bg-ink/15'}`} />)}</div></div></div>;
+}
