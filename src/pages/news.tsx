@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { Flag, Link2, Share2 } from 'lucide-react';
+import { ArrowRight, Clock3, Flag, Link2, Newspaper, Search, Share2, TrendingUp } from 'lucide-react';
 import { addHistory, getNews, getNewsBySlug, getNewsCategories, getNotifications, getProductsByIds, reportArticle, type FeedKind } from '../lib/api';
 import { shortDate, timeAgo } from '../lib/format';
 import { useAsync } from '../hooks/useAsync';
@@ -28,4 +28,56 @@ export function Article(){
 }
 function ReportSheet({open,onClose,newsId}:{open:boolean;onClose:()=>void;newsId:string}){const{user}=useAuth();const toast=useToast();const send=async(reason:string)=>{try{await reportArticle(newsId,reason,user?.$id);toast.show('Thanks. We will review this article.');}catch{toast.show('Could not send the report. Try again.');}onClose();};return <Sheet open={open} onClose={onClose} title="Report this article">{['Inaccurate information','Duplicate story','Looks like an advertisement','Other'].map(r=><ListRow key={r} icon="help" title={r} onClick={()=>send(r)}/>)}</Sheet>;}
 export function Notifications(){const{user}=useAuth();const nav=useNavigate();const[tab,setTab]=useState(0);const state=useAsync(()=>getNotifications(user?.$id),[user?.$id]);const kinds=[null,'news','offer','reward'];const iconOf={news:'news',offer:'tag',reward:'coin',system:'bell'} as const;return <Page title="Notifications" back right={<Link to="/settings/notifications" className="rounded-full bg-surface p-2 text-sm font-semibold">Settings</Link>}><Segmented items={['All','News','Offers','Rewards']} value={tab} onChange={setTab}/><Async state={{...state,data:state.data?.filter(x=>!kinds[tab]||x.kind===kinds[tab])}} empty={<EmptyState icon="bell" title="You are all caught up" text="New alerts will show up here."/>}>{items=><div>{items.map(x=><ListRow key={x.$id} icon={iconOf[x.kind]} title={x.title} sub={(x.body??'')+' '+timeAgo(x.$createdAt)} onClick={x.href?()=>nav(x.href!):undefined} right="none"/>)}</div>}</Async></Page>;}
-export function NewsHub({mode='news'}:{mode?:'news'|'articles'}){const cats=useAsync(getNewsCategories,[]);const[i,setI]=useState(0);const list=cats.data??[];const slug=i>0?list[i-1]?.slug:undefined;const feed=useAsync(()=>getNews({category:slug,kind:mode==='articles'?'recommended':'latest',limit:30}),[slug,mode]);const first=!slug?feed.data?.[0]:undefined;const title=mode==='articles'?'Articles & Guides':'Finance News';return <Page title={title} hero={<section className="mx-auto max-w-6xl px-4 pt-10 md:px-6 md:pt-16"><h1 className="text-4xl font-extrabold leading-tight md:text-6xl">{title}</h1><p className="mt-3 max-w-2xl text-slate md:text-lg">{mode==='articles'?'Explainers and guides to help you decide with confidence.':'Approved stories on banking, markets, RBI and personal finance, with publisher attribution.'}</p></section>}><Chips items={['All',...list.map(c=>c.name)]} value={i} onChange={setI}/>{first&&<FeaturedCard n={first}/>}<FeedList state={{...feed,data:first?feed.data?.slice(1):feed.data}} emptyText="Approved stories for this category will appear here."/></Page>;}
+export function NewsHub({mode='news'}:{mode?:'news'|'articles'}){
+ const cats=useAsync(getNewsCategories,[]);
+ const [categoryIndex,setCategoryIndex]=useState(0);
+ const [kind,setKind]=useState<'latest'|'trending'|'breaking'|'top-stories'>('latest');
+ const [query,setQuery]=useState('');
+ const list=cats.data??[];
+ const slug=categoryIndex>0?list[categoryIndex-1]?.slug:undefined;
+ const feed=useAsync(()=>getNews({category:slug,kind:mode==='articles'?'recommended':kind,limit:30}),[slug,mode,kind]);
+ const trending=useAsync(()=>getNews({kind:'trending',limit:5}),[mode]);
+ const first=!slug&&kind==='latest'?feed.data?.[0]:undefined;
+ const title=mode==='articles'?'Articles & Guides':'Money & Markets';
+ const filtered=(feed.data??[]).filter(n=>!query.trim()||[n.title,n.summary,n.categoryName,n.publisher].some(v=>(v??'').toLowerCase().includes(query.trim().toLowerCase())));
+ const tabs=[{id:'latest' as const,label:'Latest'},{id:'trending' as const,label:'Trending'},{id:'breaking' as const,label:'Breaking'},{id:'top-stories' as const,label:'Top stories'}];
+ return <Page title={mode==='articles'?'Articles & Guides':'Financial News'} bare hero={<section className="mx-auto max-w-6xl px-4 pt-8 md:px-6 md:pt-14">
+  <div className="overflow-hidden rounded-[32px] bg-[#102b25] p-6 text-white shadow-[0_24px_70px_rgba(16,43,37,.18)] md:p-10">
+   <div className="flex flex-wrap items-center gap-2 text-xs font-bold uppercase tracking-[.16em] text-emerald-200"><Newspaper size={15}/> FORWORD • Money desk</div>
+   <div className="mt-5 grid gap-6 md:grid-cols-[1.2fr_.8fr] md:items-end">
+    <div><h1 className="max-w-3xl text-4xl font-extrabold leading-[1.04] md:text-6xl">{mode==='articles'?'Understand money. Make informed moves.':'The stories moving your money.'}</h1>
+     <p className="mt-4 max-w-2xl text-sm leading-6 text-white/75 md:text-base">{mode==='articles'?'Clear explainers, practical guides and expert-led financial education.':'Business, markets, economy, banking and personal finance news — curated for India.'}</p>
+    </div>
+    <form onSubmit={e=>e.preventDefault()} role="search" className="flex items-center gap-2 rounded-2xl border border-white/15 bg-white/10 p-2">
+     <Search size={18} className="ml-2 shrink-0 text-white/65"/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search financial news…" aria-label="Search financial news" className="min-w-0 flex-1 bg-transparent px-1 py-2 text-sm text-white outline-none placeholder:text-white/50"/>
+    </form>
+   </div>
+   <div className="mt-7 flex flex-wrap gap-2">
+    <Link to="/feed/top-stories" className="inline-flex items-center gap-2 rounded-full bg-[#c9f36a] px-4 py-2.5 text-xs font-extrabold text-[#173b2b]">Top stories <ArrowRight size={14}/></Link>
+    <Link to="/feed/trending" className="inline-flex items-center gap-2 rounded-full border border-white/20 px-4 py-2.5 text-xs font-bold text-white">Trending now <TrendingUp size={14}/></Link>
+    <Link to="/articles" className="rounded-full border border-white/20 px-4 py-2.5 text-xs font-bold text-white">Guides & explainers</Link>
+   </div>
+  </div>
+ </section>}>
+  <div className="space-y-8 pb-8">
+   {mode==='news'&&<section className="space-y-3">
+    <div className="flex items-center justify-between gap-3"><div><p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-pri-dark">Your daily briefing</p><h2 className="text-xl font-extrabold md:text-2xl">Explore the money beat</h2></div><span className="text-xs text-slate">India-focused coverage</span></div>
+    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+     {[['Stock markets','stock-market-news'],['Business','business-news'],['Personal finance','personal-finance'],['Economy','economy-news']].map(([label,cat])=><Link key={cat} to={'/news/category/'+cat} className="group flex items-center justify-between rounded-2xl border border-white/80 bg-white/70 p-3.5 shadow-sm transition hover:-translate-y-0.5 hover:bg-white md:p-4"><span className="text-sm font-bold">{label}</span><ArrowRight size={15} className="text-pri-dark transition group-hover:translate-x-1"/></Link>)}
+    </div>
+   </section>}
+   {mode==='news'&&<section className="rounded-3xl border border-white/80 bg-white/65 p-3 md:p-4">
+    <div className="mb-3 flex items-center gap-2"><TrendingUp size={17} className="text-pri-dark"/><h2 className="text-sm font-extrabold">News desk</h2></div>
+    <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar">{tabs.map(t=><button key={t.id} onClick={()=>{setKind(t.id);setCategoryIndex(0);}} className={`shrink-0 rounded-full px-4 py-2 text-xs font-bold transition ${kind===t.id?'bg-[#173b2b] text-white':'bg-white text-slate hover:bg-mint'}`}>{t.label}</button>)}</div>
+   </section>}
+   <section className="space-y-4">
+    <div className="flex flex-wrap items-end justify-between gap-3"><div><p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-pri-dark">{mode==='articles'?'Learn':'Latest coverage'}</p><h2 className="text-2xl font-extrabold">{mode==='articles'?'Guides & explainers':tabs.find(t=>t.id===kind)?.label+' financial news'}</h2></div><div className="flex items-center gap-1.5 text-xs text-slate"><Clock3 size={14}/> Updated from approved newsroom stories</div></div>
+    <Chips items={['All',...list.map(c=>c.name)]} value={categoryIndex} onChange={setCategoryIndex}/>
+    {first&&!query.trim()&&<FeaturedCard n={first}/>}
+    {feed.loading?<Skeleton rows={4}/>:feed.error?<ErrorState text={feed.error} onRetry={feed.reload}/>:filtered.length===0?<EmptyState title="No matching stories" text="Try another search or choose a different category." action={<Btn onClick={()=>{setQuery('');setCategoryIndex(0);setKind('latest');}}>Reset filters</Btn>}/>:<div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">{(first&&!query.trim()?filtered.filter(n=>n.$id!==first.$id):filtered).map(n=><NewsCard key={n.$id} n={n}/>)}</div>}
+   </section>
+   {mode==='news'&&(trending.data?.length??0)>0&&<section className="space-y-3"><div className="flex items-center justify-between"><h2 className="text-xl font-extrabold">Trending in finance</h2><Link to="/feed/trending" className="inline-flex items-center gap-1 text-xs font-bold text-pri-dark">See all <ArrowRight size={14}/></Link></div><div className="grid gap-3 md:grid-cols-5">{trending.data!.slice(0,5).map((n,index)=><Link key={n.$id} to={'/news/'+n.slug} className="group rounded-2xl border border-white/80 bg-white/65 p-4 transition hover:-translate-y-0.5 hover:bg-white"><span className="text-[11px] font-extrabold text-pri-dark">0{index+1} • {n.categoryName}</span><h3 className="mt-2 line-clamp-3 text-sm font-bold leading-snug group-hover:text-pri-dark">{n.title}</h3><p className="mt-3 text-[11px] text-slate">{n.publisher}</p></Link>)}</div></section>}
+   {mode==='news'&&<section className="rounded-3xl bg-[#edf4e8] p-5 md:flex md:items-center md:justify-between md:p-6"><div><p className="text-[11px] font-extrabold uppercase tracking-[.16em] text-pri-dark">More than headlines</p><h2 className="mt-1 text-xl font-extrabold">Make sense of your money</h2><p className="mt-1 text-sm text-slate">Use free calculators and compare financial products with clear disclosures.</p></div><div className="mt-4 flex flex-wrap gap-2 md:mt-0"><Link to="/calculators" className="rounded-full bg-[#173b2b] px-4 py-2.5 text-xs font-bold text-white">Explore calculators</Link><Link to="/product-comparisons" className="rounded-full border border-[#173b2b]/20 bg-white px-4 py-2.5 text-xs font-bold text-[#173b2b]">Compare products</Link></div></section>}
+  </div>
+ </Page>;
+}
