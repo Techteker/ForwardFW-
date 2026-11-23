@@ -32,7 +32,7 @@ export const useCompare=()=>useContext(C);
 export function CompareProvider({children}:{children:ReactNode}) {
  const toast=useToast();const [ids,setIds]=useState<string[]>(()=>{try{return JSON.parse(sessionStorage.getItem('forword:compare')||'[]');}catch{return[];}});
  useEffect(()=>{sessionStorage.setItem('forword:compare',JSON.stringify(ids));},[ids]);
- const value=useMemo<CmpCtx>(()=>({ids,has:id=>ids.includes(id),clear:()=>setIds([]),toggle:id=>setIds(p=>{if(p.includes(id))return p.filter(x=>x!==id);if(p.length>=3){toast.show('You can compare up to 3 products.');return p;}return[...p,id];})}),[ids,toast]);
+ const value=useMemo<CmpCtx>(()=>({ids,has:id=>ids.includes(id),clear:()=>setIds([]),toggle:id=>setIds(p=>{if(p.includes(id))return p.filter(x=>x!==id);if(p.length>=2){toast.show('You can compare up to 2 products.');return p;}return[...p,id];})}),[ids,toast]);
  return <C.Provider value={value}>{children}</C.Provider>;
 }
 export function useOnline() {
