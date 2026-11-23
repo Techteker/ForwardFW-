@@ -147,3 +147,40 @@ body {
   #root main .space-y-16 > :not([hidden]) ~ :not([hidden]) { margin-top: 2.5rem; }
   #root main .space-y-14 > :not([hidden]) ~ :not([hidden]) { margin-top: 2.25rem; }
 }
+
+
+/* Full-width responsive website shell on phones */
+@media screen and (max-width: 767px) {
+  html, body, #root {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+  #root > div,
+  #root .min-h-screen {
+    display: block;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: none !important;
+  }
+  #root header,
+  #root footer,
+  #root main,
+  #root section,
+  #root .mx-auto {
+    box-sizing: border-box;
+  }
+  #root main > *,
+  #root main > section,
+  #root .min-h-screen > section {
+    width: 100%;
+    max-width: 100%;
+  }
+  #root .grid {
+    width: 100%;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  #root .grid > * { min-width: 0; }
+  #root img, #root video, #root iframe { max-width: 100%; }
+}
