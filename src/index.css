@@ -75,3 +75,44 @@ th,td { border-bottom: 1px solid rgba(17,19,15,.2); }
   *,.reveal { animation: none !important; transition: none !important; }
   .reveal { opacity: 1; transform: none; }
 }
+
+
+/* Mobile viewport width correction: prevent the app shell/body from shrinking
+   to the content width inside embedded Android browsers. */
+html, body, #root {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+body {
+  min-height: 100vh;
+  overflow-x: clip;
+}
+#root > * {
+  width: 100%;
+  min-width: 0;
+}
+#root .min-h-screen {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+@media (max-width: 767px) {
+  html, body, #root {
+    width: 100vw;
+    min-width: 100vw;
+  }
+  #root .min-h-screen {
+    width: 100%;
+    max-width: 100%;
+  }
+  #root header > div {
+    width: calc(100% - 0px);
+    max-width: none;
+  }
+  #root main,
+  #root main > * {
+    min-width: 0;
+  }
+}
